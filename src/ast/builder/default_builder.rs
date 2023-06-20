@@ -113,10 +113,11 @@ macro_rules! default_builder {
 
             fn subshell(&mut self,
                         cmds: CommandGroup<Self::Command>,
+                        body_offset: (SourcePos, SourcePos),
                         redirects: Vec<Self::Redirect>)
                 -> Result<Self::CompoundCommand, Self::Error>
             {
-                self.0.subshell(cmds, redirects)
+                self.0.subshell(cmds, body_offset, redirects)
             }
 
             fn loop_command(&mut self,
@@ -378,13 +379,14 @@ where
     fn subshell(
         &mut self,
         cmd_group: CommandGroup<Self::Command>,
+        body_offset: (SourcePos, SourcePos),
         mut redirects: Vec<Self::Redirect>,
     ) -> Result<Self::CompoundCommand, Self::Error> {
         let mut cmds = cmd_group.commands;
         cmds.shrink_to_fit();
         redirects.shrink_to_fit();
         Ok(CompoundCommand {
-            kind: CompoundCommandKind::Subshell(cmds),
+            kind: CompoundCommandKind::Subshell(cmds, body_offset.0, body_offset.1),
             io: redirects,
         })
     }

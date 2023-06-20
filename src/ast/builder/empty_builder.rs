@@ -77,6 +77,7 @@ impl Builder for EmptyBuilder {
     fn subshell(
         &mut self,
         _cmds: CommandGroup<Self::Command>,
+        _body_offset: (SourcePos, SourcePos),
         _redirects: Vec<Self::Redirect>,
     ) -> Result<Self::Command, Self::Error> {
         Ok(())

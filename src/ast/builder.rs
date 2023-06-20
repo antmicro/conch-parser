@@ -10,6 +10,7 @@
 //! struct to the parser if you wish to use the default AST implementation.
 
 use crate::ast::{AndOr, DefaultArithmetic, DefaultParameter, RedirectOrCmdWord, RedirectOrEnvVar};
+use crate::parse::SourcePos;
 
 mod default_builder;
 mod empty_builder;
@@ -346,6 +347,7 @@ pub trait Builder {
     fn subshell(
         &mut self,
         cmds: CommandGroup<Self::Command>,
+        body_offset: (SourcePos, SourcePos),
         redirects: Vec<Self::Redirect>,
     ) -> Result<Self::CompoundCommand, Self::Error>;
 
@@ -506,9 +508,10 @@ macro_rules! impl_builder_body {
         fn subshell(
             &mut self,
             cmds: CommandGroup<Self::Command>,
+            body_offset: (SourcePos, SourcePos),
             redirects: Vec<Self::Redirect>,
         ) -> Result<Self::CompoundCommand, Self::Error> {
-            (**self).subshell(cmds, redirects)
+            (**self).subshell(cmds, body_offset, redirects)
         }
 
         fn loop_command(

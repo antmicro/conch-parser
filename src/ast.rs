@@ -3,6 +3,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::{fmt, ops};
 
+use crate::parse::SourcePos;
+
 pub mod builder;
 
 /// Type alias for the default `Parameter` representation.
@@ -332,7 +334,7 @@ pub enum CompoundCommandKind<V, W, C> {
     /// A group of commands that should be executed in the current environment.
     Brace(Vec<C>),
     /// A group of commands that should be executed in a subshell environment.
-    Subshell(Vec<C>),
+    Subshell(Vec<C>, SourcePos, SourcePos),
     /// A command that executes its body as long as its guard exits successfully.
     While(GuardBodyPair<C>),
     /// A command that executes its body as until as its guard exits unsuccessfully.

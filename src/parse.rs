@@ -1620,7 +1620,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
                     Arith(subst)
                 } else {
-                    Command(self.subshell_internal(true)?)
+                    Command(self.subshell_internal(true)?.0)
                 };
 
                 Ok(SimpleWordKind::Subst(Box::new(subst)))
@@ -1749,7 +1749,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
     /// Parses any number of sequential commands between balanced `(` and `)`.
     ///
     /// It is considered an error if no commands are present inside the subshell.
-    pub fn subshell(&mut self) -> ParseResult<builder::CommandGroup<B::Command>, B::Error> {
+    pub fn subshell(&mut self) -> ParseResult<(builder::CommandGroup<B::Command>, (SourcePos, SourcePos)), B::Error> {
         self.subshell_internal(false)
     }
 
@@ -1758,7 +1758,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
     fn subshell_internal(
         &mut self,
         empty_body_ok: bool,
-    ) -> ParseResult<builder::CommandGroup<B::Command>, B::Error> {
+    ) -> ParseResult<(builder::CommandGroup<B::Command>, (SourcePos, SourcePos)), B::Error> {
         let start_pos = self.iter.pos();
         eat!(self, { ParenOpen => {} });
 
@@ -1771,7 +1771,8 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
         match self.iter.peek() {
             Some(&ParenClose) if empty_body_ok || !body.commands.is_empty() => {
                 self.iter.next();
-                Ok(body)
+                let end_pos = self.iter.pos();
+                Ok((body, (start_pos, end_pos)))
             }
             Some(_) => Err(self.make_unexpected_err()),
             None => Err(ParseError::Unmatched(ParenOpen, start_pos)),
@@ -1842,9 +1843,9 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             }
 
             Some(CompoundCmdKeyword::Subshell) => {
-                let cmds = self.subshell()?;
+                let (cmds, body_offset) = self.subshell()?;
                 let io = self.redirect_list()?;
-                self.builder.subshell(cmds, io)?
+                self.builder.subshell(cmds, body_offset, io)?
             }
 
             None => return Err(self.make_unexpected_err()),
@@ -2268,12 +2269,12 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             } else if Some(&ParenOpen) == self.iter.peek() {
                 // Otherwise it is possible for there to be a subshell as the body
                 let subshell = self.subshell_internal(true)?;
-                if subshell.commands.is_empty() && subshell.trailing_comments.is_empty() {
+                if subshell.0.commands.is_empty() && subshell.0.trailing_comments.is_empty() {
                     // Case like `function foo () ...`
                     None
                 } else {
                     // Case like `function foo (subshell)`
-                    Some(self.builder.subshell(subshell, Vec::new())?)
+                    Some(self.builder.subshell(subshell.0, subshell.1, Vec::new())?)
                 }
             } else {
                 None
@@ -2978,9 +2979,9 @@ mod tests {
 
         let cases_subshell = vec![
             "function foo() #comment1\n\n#comment2\n (echo body)",
-            "function foo #comment1\n\n#comment2\n   (echo body)",
-            "foo() #comment1\n\n#comment2\n          (echo body)",
-            "foo () #comment1\n\n#comment2\n         (echo body)",
+            "function foo   #comment1\n\n#comment2\n (echo body)",
+            "foo()          #comment1\n\n#comment2\n (echo body)",
+            "foo ()         #comment1\n\n#comment2\n (echo body)",
         ];
 
         let comments = vec![
@@ -2996,7 +2997,11 @@ mod tests {
             io: vec![],
         };
         let body_subshell = CompoundCommand {
-            kind: Subshell(body),
+            kind: Subshell(
+                body,
+                SourcePos { byte: 37, line: 4, col: 2 },
+                SourcePos { byte: 0, line: 4, col: 12 }
+            ),
             io: vec![],
         };
 
