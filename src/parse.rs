@@ -2997,11 +2997,11 @@ mod tests {
             io: vec![],
         };
         let body_subshell = CompoundCommand {
-            kind: Subshell(
+            kind: Subshell {
                 body,
-                SourcePos { byte: 37, line: 4, col: 2 },
-                SourcePos { byte: 0, line: 4, col: 12 }
-            ),
+                start_pos: SourcePos { byte: 37, line: 4, col: 2 },
+                end_pos: SourcePos { byte: 0, line: 4, col: 12 }
+            },
             io: vec![],
         };
 

@@ -386,7 +386,11 @@ where
         cmds.shrink_to_fit();
         redirects.shrink_to_fit();
         Ok(CompoundCommand {
-            kind: CompoundCommandKind::Subshell(cmds, body_offset.0, body_offset.1),
+            kind: CompoundCommandKind::Subshell {
+                body: cmds,
+                start_pos: body_offset.0,
+                end_pos: body_offset.1
+            },
             io: redirects,
         })
     }
