@@ -63,7 +63,7 @@ fn count_echo_pipeable(cmd: &ast::DefaultPipeableCommand) -> usize {
 
 fn count_echo_compound(cmd: &ast::DefaultCompoundCommand) -> usize {
     match &cmd.kind {
-        ast::CompoundCommandKind::Brace(cmds) | ast::CompoundCommandKind::Subshell(cmds) => {
+        ast::CompoundCommandKind::Brace(cmds) | ast::CompoundCommandKind::Subshell { body: cmds, start_pos: _, end_pos: _} => {
             count_echo_top_level_array(&cmds)
         }
 

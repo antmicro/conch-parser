@@ -5,6 +5,7 @@ use conch_parser::ast::Command::*;
 use conch_parser::ast::CompoundCommandKind::*;
 use conch_parser::ast::PipeableCommand::*;
 use conch_parser::ast::*;
+use conch_parser::parse::SourcePos;
 use conch_parser::token::Token;
 
 mod parse_support;
@@ -81,10 +82,14 @@ fn test_command_delegates_valid_commands_brace() {
 
 #[test]
 fn test_command_delegates_valid_commands_subshell() {
-    let commands = ["(foo)", "( foo)"];
+    let commands = ["(foo )", "( foo)"];
 
     let correct = Compound(Box::new(CompoundCommand {
-        kind: Subshell(vec![cmd("foo")]),
+        kind: Subshell {
+            body: vec![cmd("foo")],
+            start_pos: SourcePos { byte: 0, line: 1, col: 1 },
+            end_pos: SourcePos { byte: 5, line: 1, col: 6 },
+        },
         io: vec![],
     }));
 

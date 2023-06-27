@@ -3,6 +3,7 @@ use conch_parser::ast::CompoundCommandKind::*;
 use conch_parser::ast::PipeableCommand::*;
 use conch_parser::ast::*;
 use conch_parser::parse::ParseError::*;
+use conch_parser::parse::SourcePos;
 use conch_parser::token::Token;
 
 use std::rc::Rc;
@@ -175,7 +176,11 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
     let correct = FunctionDef(
         String::from("foo"),
         Rc::new(CompoundCommand {
-            kind: Subshell(vec![cmd_args("echo", &["subshell"])]),
+            kind: Subshell {
+                body: vec![cmd_args("echo", &["subshell"])],
+                start_pos: SourcePos { byte:13, line:1, col:14},
+                end_pos: SourcePos { byte:27, line:1, col:28},
+            },
             io: vec![],
         }),
     );
@@ -186,18 +191,57 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
             .function_declaration()
             .unwrap()
     );
+
+    let correct = FunctionDef(
+        String::from("foo"),
+        Rc::new(CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd_args("echo", &["subshell"])],
+                start_pos: SourcePos { byte:15, line:1, col:16},
+                end_pos: SourcePos { byte:29, line:1, col:30},
+            },
+            io: vec![],
+        }),
+    );
+
     assert_eq!(
         correct,
         make_parser("function foo() (echo subshell)")
             .function_declaration()
             .unwrap()
     );
+
+    let correct = FunctionDef(
+        String::from("foo"),
+        Rc::new(CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd_args("echo", &["subshell"])],
+                start_pos: SourcePos { byte:16, line:1, col:17},
+                end_pos: SourcePos { byte:30, line:1, col:31},
+            },
+            io: vec![],
+        }),
+    );
+
     assert_eq!(
         correct,
         make_parser("function foo () (echo subshell)")
             .function_declaration()
             .unwrap()
     );
+
+    let correct = FunctionDef(
+        String::from("foo"),
+        Rc::new(CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd_args("echo", &["subshell"])],
+                start_pos: SourcePos { byte:13, line:2, col:1},
+                end_pos: SourcePos { byte:27, line:2, col:15},
+            },
+            io: vec![],
+        }),
+    );
+
     assert_eq!(
         correct,
         make_parser("function foo\n(echo subshell)")

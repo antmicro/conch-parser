@@ -1,6 +1,6 @@
 #![deny(rust_2018_idioms)]
 use conch_parser::ast::builder::*;
-use conch_parser::parse::ParseError::*;
+use conch_parser::parse::{ParseError::*, SourcePos};
 use conch_parser::token::Token;
 
 mod parse_support;
@@ -9,25 +9,41 @@ use crate::parse_support::*;
 #[test]
 fn test_subshell_valid() {
     let mut p = make_parser("( foo\nbar; baz\n#comment\n )");
-    let correct = CommandGroup {
+    let correct_cmd_group = CommandGroup {
         commands: vec![cmd("foo"), cmd("bar"), cmd("baz")],
         trailing_comments: vec![Newline(Some("#comment".into()))],
     };
-    assert_eq!(correct, p.subshell().unwrap());
+    let correct_position = (
+        SourcePos { byte:0, line:1, col:1},
+        SourcePos { byte:25, line:4, col:2}
+    );
+    assert_eq!((correct_cmd_group, correct_position), p.subshell().unwrap());
 }
 
 #[test]
 fn test_subshell_valid_separator_not_needed() {
-    let correct = CommandGroup {
-        commands: vec![cmd("foo")],
-        trailing_comments: vec![],
-    };
+    let correct = (
+            CommandGroup {
+            commands: vec![cmd("foo")],
+            trailing_comments: vec![],
+        },
+        (
+            SourcePos { byte:0, line:1, col:1},
+            SourcePos { byte:6, line:1, col:7}
+        )
+    );
     assert_eq!(correct, make_parser("( foo )").subshell().unwrap());
 
-    let correct_with_comment = CommandGroup {
-        commands: vec![cmd("foo")],
-        trailing_comments: vec![Newline(Some("#comment".into()))],
-    };
+    let correct_with_comment = (
+        CommandGroup {
+            commands: vec![cmd("foo")],
+            trailing_comments: vec![Newline(Some("#comment".into()))],
+        },
+        (
+            SourcePos { byte:0, line:1, col:1},
+            SourcePos { byte:16, line:3, col:2}
+        )
+    );
     assert_eq!(
         correct_with_comment,
         make_parser("( foo\n#comment\n )").subshell().unwrap()

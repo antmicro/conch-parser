@@ -1770,8 +1770,8 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
         match self.iter.peek() {
             Some(&ParenClose) if empty_body_ok || !body.commands.is_empty() => {
-                self.iter.next();
                 let end_pos = self.iter.pos();
+                self.iter.next();
                 Ok((body, (start_pos, end_pos)))
             }
             Some(_) => Err(self.make_unexpected_err()),
@@ -3000,7 +3000,7 @@ mod tests {
             kind: Subshell {
                 body,
                 start_pos: SourcePos { byte: 37, line: 4, col: 2 },
-                end_pos: SourcePos { byte: 0, line: 4, col: 12 }
+                end_pos: SourcePos { byte: 47, line: 4, col: 12 }
             },
             io: vec![],
         };

@@ -3,6 +3,7 @@ use conch_parser::ast::builder::*;
 use conch_parser::ast::CompoundCommandKind::*;
 use conch_parser::ast::*;
 use conch_parser::parse::ParseError::*;
+use conch_parser::parse::SourcePos;
 use conch_parser::token::Token;
 
 mod parse_support;
@@ -157,16 +158,54 @@ fn test_compound_command_delegates_valid_commands_brace() {
 
 #[test]
 fn test_compound_command_delegates_valid_commands_subshell() {
-    let commands = ["(foo)", "( foo)", " (foo)", "\t(foo)", "\\\n(foo)"];
+    let commands = ["(foo)", "( foo)", "(foo )", "\t(foo)", "\\\n(foo)"];
+    let corrects = [
+        CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd("foo")],
+                start_pos: SourcePos { byte:0, line:1, col:1},
+                end_pos: SourcePos { byte:4, line:1, col:5},
+            },
+            io: vec![],
+        },
+        CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd("foo")],
+                start_pos: SourcePos { byte:0, line:1, col:1},
+                end_pos: SourcePos { byte:5, line:1, col:6},
+            },
+            io: vec![],
+        },
+        CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd("foo")],
+                start_pos: SourcePos { byte:0, line:1, col:1},
+                end_pos: SourcePos { byte:5, line:1, col:6},
+            },
+            io: vec![],
+        },
+        CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd("foo")],
+                start_pos: SourcePos { byte:1, line:1, col:2},
+                end_pos: SourcePos { byte:5, line:1, col:6},
+            },
+            io: vec![],
+        },
+        CompoundCommand {
+            kind: Subshell {
+                body: vec![cmd("foo")],
+                start_pos: SourcePos { byte:2, line:2, col:1},
+                end_pos: SourcePos { byte:6, line:2, col:5},
+            },
+            io: vec![],
+        }
+    ];
 
-    let correct = CompoundCommand {
-        kind: Subshell(vec![cmd("foo")]),
-        io: vec![],
-    };
 
-    for cmd in &commands {
+    for (cmd, correct) in commands.iter().zip(corrects.iter()) {
         match make_parser(cmd).compound_command() {
-            Ok(ref result) if result == &correct => {}
+            Ok(ref result) if result == correct => {}
             Ok(result) => panic!(
                 "Parsed \"{}\" as an unexpected command type:\n{:#?}",
                 cmd, result
