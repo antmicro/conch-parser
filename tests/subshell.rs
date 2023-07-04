@@ -14,8 +14,16 @@ fn test_subshell_valid() {
         trailing_comments: vec![Newline(Some("#comment".into()))],
     };
     let correct_position = (
-        SourcePos { byte:0, line:1, col:1},
-        SourcePos { byte:25, line:4, col:2}
+        SourcePos {
+            byte: 0,
+            line: 1,
+            col: 1,
+        },
+        SourcePos {
+            byte: 25,
+            line: 4,
+            col: 2,
+        },
     );
     assert_eq!((correct_cmd_group, correct_position), p.subshell().unwrap());
 }
@@ -23,14 +31,22 @@ fn test_subshell_valid() {
 #[test]
 fn test_subshell_valid_separator_not_needed() {
     let correct = (
-            CommandGroup {
+        CommandGroup {
             commands: vec![cmd("foo")],
             trailing_comments: vec![],
         },
         (
-            SourcePos { byte:0, line:1, col:1},
-            SourcePos { byte:6, line:1, col:7}
-        )
+            SourcePos {
+                byte: 0,
+                line: 1,
+                col: 1,
+            },
+            SourcePos {
+                byte: 6,
+                line: 1,
+                col: 7,
+            },
+        ),
     );
     assert_eq!(correct, make_parser("( foo )").subshell().unwrap());
 
@@ -40,9 +56,17 @@ fn test_subshell_valid_separator_not_needed() {
             trailing_comments: vec![Newline(Some("#comment".into()))],
         },
         (
-            SourcePos { byte:0, line:1, col:1},
-            SourcePos { byte:16, line:3, col:2}
-        )
+            SourcePos {
+                byte: 0,
+                line: 1,
+                col: 1,
+            },
+            SourcePos {
+                byte: 16,
+                line: 3,
+                col: 2,
+            },
+        ),
     );
     assert_eq!(
         correct_with_comment,

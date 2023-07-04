@@ -163,45 +163,84 @@ fn test_compound_command_delegates_valid_commands_subshell() {
         CompoundCommand {
             kind: Subshell {
                 body: vec![cmd("foo")],
-                start_pos: SourcePos { byte:0, line:1, col:1},
-                end_pos: SourcePos { byte:4, line:1, col:5},
+                start_pos: SourcePos {
+                    byte: 0,
+                    line: 1,
+                    col: 1,
+                },
+                end_pos: SourcePos {
+                    byte: 4,
+                    line: 1,
+                    col: 5,
+                },
             },
             io: vec![],
         },
         CompoundCommand {
             kind: Subshell {
                 body: vec![cmd("foo")],
-                start_pos: SourcePos { byte:0, line:1, col:1},
-                end_pos: SourcePos { byte:5, line:1, col:6},
+                start_pos: SourcePos {
+                    byte: 0,
+                    line: 1,
+                    col: 1,
+                },
+                end_pos: SourcePos {
+                    byte: 5,
+                    line: 1,
+                    col: 6,
+                },
             },
             io: vec![],
         },
         CompoundCommand {
             kind: Subshell {
                 body: vec![cmd("foo")],
-                start_pos: SourcePos { byte:0, line:1, col:1},
-                end_pos: SourcePos { byte:5, line:1, col:6},
+                start_pos: SourcePos {
+                    byte: 0,
+                    line: 1,
+                    col: 1,
+                },
+                end_pos: SourcePos {
+                    byte: 5,
+                    line: 1,
+                    col: 6,
+                },
             },
             io: vec![],
         },
         CompoundCommand {
             kind: Subshell {
                 body: vec![cmd("foo")],
-                start_pos: SourcePos { byte:1, line:1, col:2},
-                end_pos: SourcePos { byte:5, line:1, col:6},
+                start_pos: SourcePos {
+                    byte: 1,
+                    line: 1,
+                    col: 2,
+                },
+                end_pos: SourcePos {
+                    byte: 5,
+                    line: 1,
+                    col: 6,
+                },
             },
             io: vec![],
         },
         CompoundCommand {
             kind: Subshell {
                 body: vec![cmd("foo")],
-                start_pos: SourcePos { byte:2, line:2, col:1},
-                end_pos: SourcePos { byte:6, line:2, col:5},
+                start_pos: SourcePos {
+                    byte: 2,
+                    line: 2,
+                    col: 1,
+                },
+                end_pos: SourcePos {
+                    byte: 6,
+                    line: 2,
+                    col: 5,
+                },
             },
             io: vec![],
-        }
+        },
     ];
-
 
     for (cmd, correct) in commands.iter().zip(corrects.iter()) {
         match make_parser(cmd).compound_command() {

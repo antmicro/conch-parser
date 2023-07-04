@@ -324,7 +324,7 @@ where
         bang: bool,
         cmds: Vec<(Vec<Newline>, Self::PipeableCommand)>,
     ) -> Result<Self::ListableCommand, Self::Error> {
-        debug_assert_eq!(cmds.is_empty(), false);
+        debug_assert!(!cmds.is_empty());
         let mut cmds: Vec<_> = cmds.into_iter().map(|(_, c)| c).collect();
 
         // Pipe is the only AST node which allows for a status
@@ -389,7 +389,7 @@ where
             kind: CompoundCommandKind::Subshell {
                 body: cmds,
                 start_pos: body_offset.0,
-                end_pos: body_offset.1
+                end_pos: body_offset.1,
             },
             io: redirects,
         })

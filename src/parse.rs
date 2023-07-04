@@ -202,7 +202,7 @@ enum CompoundCmdKeyword {
 }
 
 /// Used to configure when `Parser::command_group` stops parsing commands.
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub struct CommandGroupDelimiters<'a, 'b, 'c> {
     /// Any token which appears after a complete command separator (e.g. `;`, `&`, or a
     /// newline) will be considered a delimeter for the command group.
@@ -212,16 +212,6 @@ pub struct CommandGroupDelimiters<'a, 'b, 'c> {
     pub reserved_words: &'b [&'static str],
     /// Any token which matches this provided set will be considered a delimeter.
     pub exact_tokens: &'c [Token],
-}
-
-impl Default for CommandGroupDelimiters<'static, 'static, 'static> {
-    fn default() -> Self {
-        CommandGroupDelimiters {
-            reserved_tokens: &[],
-            reserved_words: &[],
-            exact_tokens: &[],
-        }
-    }
 }
 
 /// An `Iterator` adapter around a `Parser`.
@@ -690,6 +680,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
     /// redirect or word if either is found. In other words, `Ok(Some(Ok(redirect)))`
     /// will result if a redirect is found, `Ok(Some(Err(word)))` if a word is found,
     /// or `Ok(None)` if neither is found.
+    #[allow(clippy::type_complexity)]
     pub fn redirect(&mut self) -> ParseResult<Option<Result<B::Redirect, B::Word>>, B::Error> {
         fn could_be_numeric<C>(word: &WordKind<C>) -> bool {
             let simple_could_be_numeric = |word: &SimpleWordKind<C>| match *word {
@@ -702,7 +693,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
                 // Literals and can be statically checked if they have non-numeric characters
                 SimpleWordKind::Escaped(ref s) | SimpleWordKind::Literal(ref s) => {
-                    s.chars().all(|c| c.is_digit(10))
+                    s.chars().all(|c| c.is_ascii_digit())
                 }
 
                 // These could end up evaluating to a numeric,
@@ -714,14 +705,14 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
             match *word {
                 Simple(ref s) => simple_could_be_numeric(s),
-                SingleQuoted(ref s) => s.chars().all(|c| c.is_digit(10)),
+                SingleQuoted(ref s) => s.chars().all(|c| c.is_ascii_digit()),
                 DoubleQuoted(ref fragments) => fragments.iter().all(simple_could_be_numeric),
             }
         }
 
         fn as_num<C>(word: &ComplexWordKind<C>) -> Option<u16> {
             match *word {
-                Single(Simple(SimpleWordKind::Literal(ref s))) => u16::from_str_radix(s, 10).ok(),
+                Single(Simple(SimpleWordKind::Literal(ref s))) => s.parse::<u16>().ok(),
                 Single(_) => None,
                 Concat(ref fragments) => {
                     let mut buf = String::new();
@@ -733,7 +724,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
                         }
                     }
 
-                    u16::from_str_radix(&buf, 10).ok()
+                    buf.parse::<u16>().ok()
                 }
             }
         }
@@ -866,14 +857,11 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
         // parsing out a word as usual), so to maintain reasonable expectations, we'll
         // do the same here.
         let mut delim_tokens = Vec::new();
-        loop {
+
+        while let Some(t) = self.iter.peek() {
             // Normally parens are never part of words, but many
             // shells permit them to be part of a heredoc delimeter.
-            if let Some(t) = self.iter.peek() {
-                if t.is_word_delimiter() && t != &ParenOpen {
-                    break;
-                }
-            } else {
+            if t.is_word_delimiter() && t != &ParenOpen {
                 break;
             }
 
@@ -1002,7 +990,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             let mut line = Vec::new();
             'line: loop {
                 if strip_tabs {
-                    let skip_next = if let Some(&Whitespace(ref w)) = self.iter.peek() {
+                    let skip_next = if let Some(Whitespace(w)) = self.iter.peek() {
                         let stripped = w.trim_start_matches('\t');
                         let num_tabs = w.len() - stripped.len();
                         line_start_pos.advance_tabs(num_tabs);
@@ -1315,11 +1303,14 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             match self.iter.next() {
                 // Backslashes only escape a few tokens when double-quoted-type words
                 Some(Backslash) => {
-                    let special = match self.iter.peek() {
-                        Some(&Dollar) | Some(&Backtick) | Some(&DoubleQuote) | Some(&Backslash)
-                        | Some(&Newline) => true,
-                        _ => false,
-                    };
+                    let special = matches!(
+                        self.iter.peek(),
+                        Some(&Dollar)
+                            | Some(&Backtick)
+                            | Some(&DoubleQuote)
+                            | Some(&Backslash)
+                            | Some(&Newline)
+                    );
 
                     if special || self.iter.peek() == delim_close.as_ref() {
                         store!(SimpleWordKind::Escaped(
@@ -1749,12 +1740,16 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
     /// Parses any number of sequential commands between balanced `(` and `)`.
     ///
     /// It is considered an error if no commands are present inside the subshell.
-    pub fn subshell(&mut self) -> ParseResult<(builder::CommandGroup<B::Command>, (SourcePos, SourcePos)), B::Error> {
+    #[allow(clippy::type_complexity)]
+    pub fn subshell(
+        &mut self,
+    ) -> ParseResult<(builder::CommandGroup<B::Command>, (SourcePos, SourcePos)), B::Error> {
         self.subshell_internal(false)
     }
 
     /// Like `Parser::subshell` but allows the caller to specify
     /// if an empty body constitutes an error or not.
+    #[allow(clippy::type_complexity)]
     fn subshell_internal(
         &mut self,
         empty_body_ok: bool,
@@ -2061,13 +2056,13 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
         macro_rules! missing_in {
             () => {
-                |_| ParseError::IncompleteCmd(CASE, start_pos, IN, self.iter.pos());
+                |_| ParseError::IncompleteCmd(CASE, start_pos, IN, self.iter.pos())
             };
         }
 
         macro_rules! missing_esac {
             () => {
-                |_| ParseError::IncompleteCmd(CASE, start_pos, ESAC, self.iter.pos());
+                |_| ParseError::IncompleteCmd(CASE, start_pos, ESAC, self.iter.pos())
             };
         }
 
@@ -2356,13 +2351,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             return None;
         }
 
-        let care_about_whitespace = tokens.iter().any(|tok| {
-            if let Whitespace(_) = *tok {
-                true
-            } else {
-                false
-            }
-        });
+        let care_about_whitespace = tokens.iter().any(|tok| matches!(*tok, Whitespace(_)));
 
         // If the caller cares about whitespace as a reserved word we should
         // do a reserved word check without skipping any leading whitespace.
@@ -2460,6 +2449,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
     /// Checks that one of the specified strings appears as a reserved word
     /// and consumes it, returning the string it matched in case the caller
     /// cares which specific reserved word was found.
+    #[allow(clippy::result_unit_err)]
     pub fn reserved_word<'a>(&mut self, words: &'a [&str]) -> Result<&'a str, ()> {
         match self.peek_reserved_word(words) {
             Some(s) => {
@@ -2836,7 +2826,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             }
         });
 
-        let num = if let Some(&Literal(ref s)) = self.iter.peek() {
+        let num = if let Some(Literal(s)) = self.iter.peek() {
             if s.starts_with("0x") || s.starts_with("0X") {
                 // from_str_radix does not like it when 0x is present
                 // in the string to parse, thus we should strip it off.
@@ -2852,7 +2842,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
             } else if s.starts_with('0') {
                 isize::from_str_radix(s, 8).ok()
             } else {
-                isize::from_str_radix(s, 10).ok()
+                s.parse::<isize>().ok()
             }
         } else {
             None
@@ -2999,8 +2989,16 @@ mod tests {
         let body_subshell = CompoundCommand {
             kind: Subshell {
                 body,
-                start_pos: SourcePos { byte: 37, line: 4, col: 2 },
-                end_pos: SourcePos { byte: 47, line: 4, col: 12 }
+                start_pos: SourcePos {
+                    byte: 37,
+                    line: 4,
+                    col: 2,
+                },
+                end_pos: SourcePos {
+                    byte: 47,
+                    line: 4,
+                    col: 12,
+                },
             },
             io: vec![],
         };

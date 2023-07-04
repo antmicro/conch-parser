@@ -178,8 +178,16 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
         Rc::new(CompoundCommand {
             kind: Subshell {
                 body: vec![cmd_args("echo", &["subshell"])],
-                start_pos: SourcePos { byte:13, line:1, col:14},
-                end_pos: SourcePos { byte:27, line:1, col:28},
+                start_pos: SourcePos {
+                    byte: 13,
+                    line: 1,
+                    col: 14,
+                },
+                end_pos: SourcePos {
+                    byte: 27,
+                    line: 1,
+                    col: 28,
+                },
             },
             io: vec![],
         }),
@@ -197,8 +205,16 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
         Rc::new(CompoundCommand {
             kind: Subshell {
                 body: vec![cmd_args("echo", &["subshell"])],
-                start_pos: SourcePos { byte:15, line:1, col:16},
-                end_pos: SourcePos { byte:29, line:1, col:30},
+                start_pos: SourcePos {
+                    byte: 15,
+                    line: 1,
+                    col: 16,
+                },
+                end_pos: SourcePos {
+                    byte: 29,
+                    line: 1,
+                    col: 30,
+                },
             },
             io: vec![],
         }),
@@ -216,8 +232,16 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
         Rc::new(CompoundCommand {
             kind: Subshell {
                 body: vec![cmd_args("echo", &["subshell"])],
-                start_pos: SourcePos { byte:16, line:1, col:17},
-                end_pos: SourcePos { byte:30, line:1, col:31},
+                start_pos: SourcePos {
+                    byte: 16,
+                    line: 1,
+                    col: 17,
+                },
+                end_pos: SourcePos {
+                    byte: 30,
+                    line: 1,
+                    col: 31,
+                },
             },
             io: vec![],
         }),
@@ -235,8 +259,16 @@ fn test_function_declaration_parens_can_be_subshell_if_function_keyword_present(
         Rc::new(CompoundCommand {
             kind: Subshell {
                 body: vec![cmd_args("echo", &["subshell"])],
-                start_pos: SourcePos { byte:13, line:2, col:1},
-                end_pos: SourcePos { byte:27, line:2, col:15},
+                start_pos: SourcePos {
+                    byte: 13,
+                    line: 2,
+                    col: 1,
+                },
+                end_pos: SourcePos {
+                    byte: 27,
+                    line: 2,
+                    col: 15,
+                },
             },
             io: vec![],
         }),

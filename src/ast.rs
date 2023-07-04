@@ -340,7 +340,7 @@ pub enum CompoundCommandKind<V, W, C> {
         /// Start position in source
         start_pos: SourcePos,
         /// End position in source
-        end_pos: SourcePos
+        end_pos: SourcePos,
     },
     /// A command that executes its body as long as its guard exits successfully.
     While(GuardBodyPair<C>),

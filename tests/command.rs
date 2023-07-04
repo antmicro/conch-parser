@@ -87,8 +87,16 @@ fn test_command_delegates_valid_commands_subshell() {
     let correct = Compound(Box::new(CompoundCommand {
         kind: Subshell {
             body: vec![cmd("foo")],
-            start_pos: SourcePos { byte: 0, line: 1, col: 1 },
-            end_pos: SourcePos { byte: 5, line: 1, col: 6 },
+            start_pos: SourcePos {
+                byte: 0,
+                line: 1,
+                col: 1,
+            },
+            end_pos: SourcePos {
+                byte: 5,
+                line: 1,
+                col: 6,
+            },
         },
         io: vec![],
     }));
