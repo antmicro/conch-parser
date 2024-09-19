@@ -626,8 +626,8 @@ where
                 SimpleWordKind::Tilde => SimpleWord::Tilde,
                 SimpleWordKind::Colon => SimpleWord::Colon,
 
-                SimpleWordKind::CommandSubst(c) => {
-                    SimpleWord::Subst(Box::new(ParameterSubstitution::Command(c.commands)))
+                SimpleWordKind::CommandSubst(c, p) => {
+                    SimpleWord::Subst(Box::new(ParameterSubstitution::Command(c.commands, p)))
                 }
 
                 SimpleWordKind::Subst(s) => {
@@ -636,7 +636,7 @@ where
                     let s = *s;
                     let subst = match s {
                         Len(p) => ParameterSubstitution::Len(map_param(p)),
-                        Command(c) => ParameterSubstitution::Command(c.commands),
+                        Command(c, p) => ParameterSubstitution::Command(c.commands, p),
                         Arith(a) => ParameterSubstitution::Arith(a.map(map_arith)),
                         Default(c, p, w) => {
                             ParameterSubstitution::Default(c, map_param(p), map!(w))

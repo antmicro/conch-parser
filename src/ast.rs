@@ -50,7 +50,7 @@ pub type DefaultParameterSubstitution = ParameterSubstitution<
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParameterSubstitution<P, W, C, A> {
     /// Returns the standard output of running a command, e.g. `$(cmd)`
-    Command(Vec<C>),
+    Command(Vec<C>, (SourcePos, SourcePos)),
     /// Returns the length of the value of a parameter, e.g. `${#param}`
     Len(P),
     /// Returns the resulting value of an arithmetic subsitution, e.g. `$(( x++ ))`

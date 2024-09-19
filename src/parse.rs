@@ -700,7 +700,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
                 // but we'll have to see at runtime.
                 SimpleWordKind::Param(_)
                 | SimpleWordKind::Subst(_)
-                | SimpleWordKind::CommandSubst(_) => true,
+                | SimpleWordKind::CommandSubst(_, _) => true,
             };
 
             match *word {
@@ -1371,7 +1371,7 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
         let cmd_subst = self.command_group_internal(CommandGroupDelimiters::default());
         let _ = mem::replace(&mut self.iter, tok_backup);
 
-        Ok(SimpleWordKind::CommandSubst(cmd_subst?))
+        Ok(SimpleWordKind::CommandSubst(cmd_subst?, (backtick_pos, self.iter.pos())))
     }
 
     /// Parses a parameters such as `$$`, `$1`, `$foo`, etc, or
@@ -1611,7 +1611,8 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
 
                     Arith(subst)
                 } else {
-                    Command(self.subshell_internal(true)?.0)
+                    let (c, p) = self.subshell_internal(true)?;
+                    Command(c, p)
                 };
 
                 Ok(SimpleWordKind::Subst(Box::new(subst)))

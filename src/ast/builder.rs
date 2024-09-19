@@ -161,7 +161,7 @@ pub enum SimpleWordKind<C> {
     /// A parameter substitution, e.g. `${param-word}`.
     Subst(Box<ParameterSubstitutionKind<ComplexWordKind<C>, C>>),
     /// Represents the standard output of some command, e.g. \`echo foo\`.
-    CommandSubst(CommandGroup<C>),
+    CommandSubst(CommandGroup<C>, (SourcePos, SourcePos)),
     /// A token which normally has a special meaning is treated as a literal
     /// because it was escaped, typically with a backslash, e.g. `\"`.
     Escaped(String),
@@ -204,7 +204,7 @@ pub enum RedirectKind<W> {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParameterSubstitutionKind<W, C> {
     /// Returns the standard output of running a command, e.g. `$(cmd)`
-    Command(CommandGroup<C>),
+    Command(CommandGroup<C>, (SourcePos, SourcePos)),
     /// Returns the length of the value of a parameter, e.g. ${#param}
     Len(DefaultParameter),
     /// Returns the resulting value of an arithmetic subsitution, e.g. `$(( x++ ))`
