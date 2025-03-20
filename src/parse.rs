@@ -1370,8 +1370,12 @@ impl<I: Iterator<Item = Token>, B: Builder> Parser<I, B> {
         mem::swap(&mut self.iter, &mut tok_backup);
         let cmd_subst = self.command_group_internal(CommandGroupDelimiters::default());
         let _ = mem::replace(&mut self.iter, tok_backup);
-
-        Ok(SimpleWordKind::CommandSubst(cmd_subst?, (backtick_pos, self.iter.pos())))
+        let pos = self.iter.pos();
+        Ok(SimpleWordKind::CommandSubst(cmd_subst?, (backtick_pos, SourcePos {
+            byte: pos.byte - 1,
+            col: pos.col,
+            line: pos.line,
+        })))
     }
 
     /// Parses a parameters such as `$$`, `$1`, `$foo`, etc, or
